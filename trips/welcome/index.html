@@ -51,6 +51,9 @@ header .who{margin-top:.9rem;font-size:.9375rem;color:var(--muted)}
         border:1px solid var(--border);border-radius:999px;background:var(--card);
         color:var(--muted)}
 .nowbtn:hover{color:var(--text)}
+/* An author display beats the UA's [hidden] rule, so say it explicitly —
+   without this the bar shows before the trip starts, pointing at nothing. */
+.nowbar[hidden],.findbar[hidden]{display:none}
 
 /* ── Overview — collapsed whole-trip index ──────────────────────────────── */
 .overview{margin-top:1.5rem;padding:1.125rem 1.25rem;background:var(--card);
