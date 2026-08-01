@@ -7,7 +7,6 @@ you can clone this repo and walk away with everything at any time.
 
 ```
 trips/<slug>/index.html   the page itself — this IS what visitors see
-sources/                  raw originals: emails, PDFs, screenshots. Never published.
 profile.md                what we know about how you travel
 ```
 
@@ -33,7 +32,8 @@ number is right there.
 
 Access is not written into the page. It is a list of addresses kept outside the
 document, so changing who can read a trip never means editing or re-committing
-one. Nothing under `sources/` is ever served.
+one. And the page is the only thing stored: your booking emails and PDFs stay
+wherever you keep them — an agent extracts what the trip needs and nothing else.
 
 ## Conventions
 
@@ -66,6 +66,6 @@ does not have to guess.
 ## Working with an agent
 
 Connect OurTrip to Claude (or any MCP-capable agent) and it can read and write
-these pages directly: `list_trips`, `create_trip`, `get_trip`, `put_trip`,
-`store_source`. It reads your email with its own connector, files the originals
-under `sources/`, and edits the page. OurTrip never sees your mailbox.
+these pages directly: `list_trips`, `create_trip`, `get_trip`, `put_trip`. It
+reads your email with its own connector and edits the page; the originals stay
+in your mailbox. OurTrip never sees your inbox and stores nothing but the page.
