@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<title>Your first trip</title>
+<meta name="description" content="A starting point. Rewrite everything.">
+
+<style>
+/* ── Tokens ─────────────────────────────────────────────────────────────── */
+:root{
+  color-scheme:light dark;
+  --bg:#faf8f4; --card:#fff; --border:#e6e1d8; --text:#1c1a17; --muted:#5f594f;
+  --accent:#b4552d; --accent-soft:#f4e6dd;
+  --green:#4d6b4e; --green-soft:#dde7da; --grey:#8b8278; --grey-soft:#ebe6dc;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --serif:ui-serif,Georgia,"Iowan Old Style",serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --shadow:0 1px 2px rgba(28,26,23,.05),0 8px 24px rgba(28,26,23,.05);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#12100e;--card:#1a1815;--border:#2c2823;--text:#ece7df;--muted:#a09689;
+        --accent:#d98a5c;--accent-soft:#2a1f18;--green-soft:#1e2a1f;--grey-soft:#242019;
+        --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25)}
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.65;
+     -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.wrap{max-width:48rem;margin:0 auto;padding:3rem 1.25rem 6rem}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.875em;background:var(--accent-soft);
+     padding:.1em .35em;border-radius:4px}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+header .kicker{font-family:var(--mono);font-size:.6875rem;letter-spacing:.16em;
+               text-transform:uppercase;color:var(--muted)}
+header h1{margin-top:.4rem;font-family:var(--serif);font-size:clamp(2rem,5vw,2.75rem);
+          font-weight:600;letter-spacing:-.02em;line-height:1.1}
+header .sub{margin-top:.5rem;color:var(--muted);font-size:1.0625rem}
+header .who{margin-top:.9rem;font-size:.9375rem;color:var(--muted)}
+
+/* ── Now bar — "you are here", revealed by JS once the trip is underway ─── */
+.nowbar{position:sticky;top:0;z-index:20;margin:1.75rem -1.25rem 0;padding:.6rem 1.25rem;
+        display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;
+        background:color-mix(in srgb,var(--bg) 88%,transparent);
+        backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--border)}
+.nowbar .lbl{font-size:.875rem;font-weight:600}
+.nowbar .nowbtns{margin-left:auto;display:flex;gap:.4rem}
+.nowbtn{font:inherit;font-size:.8125rem;cursor:pointer;padding:.25rem .6rem;
+        border:1px solid var(--border);border-radius:999px;background:var(--card);
+        color:var(--muted)}
+.nowbtn:hover{color:var(--text)}
+
+/* ── Overview — collapsed whole-trip index ──────────────────────────────── */
+.overview{margin-top:1.5rem;padding:1.125rem 1.25rem;background:var(--card);
+          border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow)}
+.overview.collapsed .ovBody{display:none}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:1rem}
+.stat .lab{display:flex;align-items:center;gap:.4rem;font-size:.75rem;
+           letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stat .val{margin-top:.15rem;font-family:var(--serif);font-size:1.375rem;font-weight:600}
+.stat .note{font-size:.8125rem;color:var(--muted)}
+.dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--grey);display:inline-block}
+.dot.g{background:var(--green)} .dot.c{background:var(--accent)}
+.legend{margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border);
+        display:flex;flex-wrap:wrap;gap:.35rem 1rem;font-size:.75rem;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:.35rem}
+
+/* ── Date divider ───────────────────────────────────────────────────────── */
+.day{margin-top:2.25rem;display:flex;align-items:center;gap:.85rem}
+.day .d{font-family:var(--mono);font-size:.75rem;letter-spacing:.1em;
+        text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.day .ln{flex:1;height:1px;background:var(--border)}
+.day.is-current .d{color:var(--accent);font-weight:700}
+
+/* ── Card — one flight / stay / booking ─────────────────────────────────── */
+.card{margin-top:.75rem;background:var(--card);border:1px solid var(--border);
+      border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.card.is-past{opacity:.55}
+.card.is-current{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),var(--shadow)}
+.card .here{padding:.4rem 1.25rem;background:var(--accent-soft);color:var(--accent);
+            font-size:.75rem;font-weight:700;letter-spacing:.04em}
+.card-top{display:flex;gap:.9rem;padding:1.125rem 1.25rem}
+.ico{font-size:1.5rem;line-height:1.2}
+.card .body{flex:1;min-width:0}
+.ttl{font-size:1.0625rem;font-weight:650;letter-spacing:-.01em}
+.arrow{color:var(--muted)}
+.meta{margin-top:.15rem;font-size:.875rem;color:var(--muted)}
+.time{margin-top:.4rem;font-size:.9375rem}
+.actions{margin-top:.7rem;display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+
+.badge{font-size:.75rem;padding:.2rem .55rem;border-radius:999px;background:var(--grey-soft);
+       color:var(--muted);white-space:nowrap}
+.badge.points{background:var(--green-soft);color:var(--green)}
+.badge.cash{background:var(--accent-soft);color:var(--accent)}
+.badge.tbd{background:var(--grey-soft);color:var(--muted)}
+.amt{font-weight:600}
+.dir,.maplink{text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+.dir{font-size:.75rem;padding:.2rem .55rem;border:1px solid var(--border);border-radius:999px;
+     border-bottom-color:var(--border);white-space:nowrap}
+.dir:hover{border-color:var(--accent)}
+
+/* ── Collapsible sections on a card ─────────────────────────────────────── */
+.card details{border-top:1px solid var(--border)}
+.card summary{padding:.7rem 1.25rem;cursor:pointer;font-size:.875rem;font-weight:600;
+              color:var(--muted);list-style:none}
+.card summary::-webkit-details-marker{display:none}
+.card summary:hover{color:var(--text)}
+.chev{display:inline-block;font-size:.6875rem;transition:transform .15s;margin-right:.3rem}
+details[open] > summary .chev{transform:rotate(90deg)}
+.det{padding:0 1.25rem 1.125rem}
+
+/* Key–value rows: the universal sink for any fact that fits nowhere else. */
+.row{display:grid;grid-template-columns:9.5rem 1fr;gap:.3rem .9rem;padding:.45rem 0;
+     border-top:1px dashed var(--border);font-size:.9375rem}
+.row:first-child{border-top:0}
+.k{color:var(--muted);font-size:.875rem}
+.v{overflow-wrap:anywhere}
+@media (max-width:34rem){.row{grid-template-columns:1fr}.k{font-size:.75rem}}
+
+/* Things to do: category-chipped suggestions. */
+.det.acts .act{padding:.55rem 0;border-top:1px dashed var(--border);font-size:.9375rem}
+.det.acts .act:first-child{border-top:0}
+.tagcat{display:inline-block;margin-right:.5rem;padding:.1rem .45rem;border-radius:4px;
+        font-size:.6875rem;font-weight:700;letter-spacing:.03em;white-space:nowrap;
+        background:var(--grey-soft);color:var(--muted)}
+.tagcat.ms{background:var(--accent-soft);color:var(--accent)}
+.tagcat.uq{background:#e8e0f0;color:#5b4680}
+.tagcat.kd{background:#dce9ef;color:#2a5d74}
+.tagcat.fr{background:var(--green-soft);color:var(--green)}
+@media (prefers-color-scheme:dark){
+  .tagcat.uq{background:#241d33;color:#b9a5dd} .tagcat.kd{background:#16262e;color:#8fc4da}
+}
+
+/* Day-by-day: the detailed per-day plan. */
+.det.days .dayplan{padding:.7rem 0;border-top:1px dashed var(--border);font-size:.9375rem}
+.det.days .dayplan:first-child{border-top:0}
+.dl{display:inline-block;min-width:6.5rem;font-family:var(--mono);font-size:.75rem;
+    letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.dayplan.today{background:var(--accent-soft);margin:0 -.6rem;padding-left:.6rem;
+               padding-right:.6rem;border-radius:8px}
+.steps{margin-top:.5rem;display:grid;gap:.5rem}
+.st{display:flex;gap:.6rem;align-items:flex-start}
+.st .ic{flex:0 0 1.25rem;text-align:center}
+.when{display:inline-block;margin-right:.35rem;padding:.05rem .4rem;border-radius:4px;
+      background:var(--grey-soft);font-family:var(--mono);font-size:.6875rem;color:var(--muted)}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+footer{margin-top:3.5rem;padding-top:1.5rem;border-top:1px solid var(--border);
+       font-size:.875rem;color:var(--muted);text-align:center}
+.pdfbtn{font:inherit;font-size:.875rem;cursor:pointer;margin-bottom:.9rem;
+        padding:.45rem 1rem;border:1px solid var(--border);border-radius:999px;
+        background:var(--card);color:var(--text)}
+.pdfbtn:hover{border-color:var(--accent)}
+
+/* ── Hide-past toggle ───────────────────────────────────────────────────── */
+body.hide-past .card.is-past,
+body.hide-past .day.is-past{display:none}
+
+/* ── Find in this trip ──────────────────────────────────────────────────── */
+.findbar{display:flex;align-items:center;gap:.6rem;margin-top:1.25rem}
+.findbar input{flex:1;min-width:0;font:inherit;font-size:.9375rem;padding:.5rem .7rem;
+        color:var(--text);background:var(--card);border:1px solid var(--border);border-radius:10px}
+.findbar input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.findn{font-size:.8125rem;color:var(--muted);white-space:nowrap}
+.card.is-nomatch,.day.is-nomatch{display:none}
+
+/* ── Print: everything expanded, nothing dimmed ─────────────────────────── */
+@media print{
+  body{background:#fff;color:#000}
+  .nowbar,.pdfbtn,.findbar{display:none}
+  .card.is-nomatch,.day.is-nomatch{display:block}
+  .card{break-inside:avoid;border-color:#ccc;box-shadow:none}
+  .card.is-past{opacity:1}
+  body.hide-past .card.is-past,body.hide-past .day.is-past{display:block}
+  .overview.collapsed .ovBody{display:block}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">Family Itinerary</div>
+    <h1>Your first trip</h1>
+    <div class="sub">Dates to be confirmed · replace all of this</div>
+    <div class="who"><b>Travellers:</b> add who is coming ·
+      <b>Contact:</b> you@example.com</div>
+  </header>
+
+  <!-- Revealed by the script below, so a reader without JS never sees a box
+       that would not filter anything. -->
+  <div class="findbar" id="findbar" hidden>
+    <input id="findq" type="search" placeholder="Find in this trip"
+           aria-label="Find in this trip" spellcheck="false" autocomplete="off">
+    <span class="findn" id="findn" role="status"></span>
+  </div>
+
+  <div class="nowbar" id="nowbar" hidden>
+    <span class="lbl">📍 <span id="nowText">Today</span></span>
+    <span class="nowbtns">
+      <button type="button" class="nowbtn" id="ovToggle">▸ Overview</button>
+      <button type="button" class="nowbtn" id="togglePast">🙈 Past</button>
+    </span>
+  </div>
+
+  <div class="overview" id="overview">
+    <div class="ovBody">
+      <div class="summary">
+        <div class="stat">
+          <div class="lab"><span class="dot g"></span>Booked</div>
+          <div class="val">0 of 0</div>
+          <div class="note">Nothing captured yet</div>
+        </div>
+        <div class="stat">
+          <div class="lab"><span class="dot c"></span>Still to do</div>
+          <div class="val">Everything</div>
+          <div class="note">Send your agent a booking to start</div>
+        </div>
+      </div>
+      <div class="legend">
+        <span><span class="dot g"></span> Paid with points</span>
+        <span><span class="dot c"></span> Paid cash</span>
+        <span><span class="dot"></span> Not captured yet</span>
+        <span>👉 tap a card for full details</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Everything below is a worked example of the conventions. Delete it and
+       write your own, or ask your agent to fill it in — the structure is what
+       matters, not this content.
+
+       The only rule the page itself depends on: every .card carries
+       data-start and data-end (ISO dates). The script at the bottom reads
+       them to work out what is past, current and upcoming.
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <div class="day"><span class="d">Mon Apr 12</span><span class="ln"></span></div>
+
+  <div class="card" data-start="2030-04-12" data-end="2030-04-12" style="animation-delay:.02s">
+    <div class="card-top">
+      <div class="ico">✈️</div>
+      <div class="body">
+        <div class="ttl">Lisbon <span class="arrow">→</span> Porto</div>
+        <div class="meta">TAP TP1234 · Economy · non-stop</div>
+        <div class="time"><b>9:15 am</b> LIS <span class="arrow">→</span> <b>10:10 am</b> OPO</div>
+        <div class="actions">
+          <span class="badge cash">● Cash <span class="amt">€96</span></span>
+          <a class="dir" href="https://www.google.com/maps/dir/?api=1&destination=Lisbon+Airport+LIS+Portugal" target="_blank" rel="noopener">🧭 To LIS</a>
+        </div>
+      </div>
+    </div>
+    <details><summary><span class="chev">▶</span> Details</summary><div class="det">
+      <div class="row"><div class="k">Duration</div><div class="v">0h 55m · non-stop</div></div>
+      <div class="row"><div class="k">Baggage</div><div class="v">1 cabin bag included</div></div>
+      <div class="row"><div class="k">Airline ref</div><div class="v">ABC123</div></div>
+      <div class="row"><div class="k">Seats</div><div class="v">12A, 12B</div></div>
+      <div class="row"><div class="k">Price</div><div class="v">€96 total (paid)</div></div>
+    </div></details>
+  </div>
+
+  <div class="day"><span class="d">Mon Apr 12 – Fri Apr 16</span><span class="ln"></span></div>
+
+  <div class="card" data-start="2030-04-12" data-end="2030-04-16" style="animation-delay:.04s">
+    <div class="card-top">
+      <div class="ico">🏠</div>
+      <div class="body">
+        <div class="ttl">Apartment on Rua de Cedofeita · Porto</div>
+        <div class="meta">4 nights · hosted by Ana</div>
+        <div class="time">In <b>Mon 3:00 pm</b> · Out <b>Fri 10:00 am</b></div>
+        <div class="actions">
+          <span class="badge tbd">● Payment not captured</span>
+          <a class="dir" href="https://www.google.com/maps/dir/?api=1&destination=Rua+de+Cedofeita+Porto+Portugal" target="_blank" rel="noopener">🧭 Directions</a>
+        </div>
+      </div>
+    </div>
+
+    <details><summary><span class="chev">▶</span> Details</summary><div class="det">
+      <div class="row"><div class="k">Address</div><div class="v">Rua de Cedofeita 000, 4050-174 Porto</div></div>
+      <div class="row"><div class="k">Confirmation</div><div class="v">HMEXAMPLE1</div></div>
+      <div class="row"><div class="k">📶 Wi-Fi</div><div class="v">Network <b>cedofeita</b> · password <b>changeme</b></div></div>
+      <div class="row"><div class="k">🚊 Getting around</div><div class="v">Metro line D runs from Trindade; the historic centre is a 15-min walk downhill. Buy a rechargeable Andante card at any station.</div></div>
+      <div class="row"><div class="k">Note</div><div class="v">Checkout lines up with the Friday train south.</div></div>
+    </div></details>
+
+    <details><summary><span class="chev">▶</span> 🎟️ Things to do</summary><div class="det acts">
+      <div class="act"><span class="tagcat ms">Must-see</span>Livraria Lello and the Clérigos tower, both a short walk from the flat — book Lello online to skip the queue.</div>
+      <div class="act"><span class="tagcat uq">Unique now</span>Spring means the Douro terraces are green and the river cruises run half-empty — the same trip costs a third of the summer price.</div>
+      <div class="act"><span class="tagcat kd">Kids</span>The Sea Life aquarium at Matosinhos, and the tram 1 ride along the river to Foz — short, cheap, and a hit at any age.</div>
+      <div class="act"><span class="tagcat fr">Free &amp; parks</span>Jardins do Palácio de Cristal for the view over the river; the Ribeira waterfront at golden hour costs nothing at all.</div>
+    </div></details>
+
+    <details><summary><span class="chev">▶</span> 📅 Day-by-day</summary><div class="det days">
+      <div class="dayplan"><span class="dl">Mon Apr 12</span>Land 10:10, metro into town, check in at 3 pm. Easy first evening on the Ribeira waterfront.</div>
+
+      <div class="dayplan"><span class="dl">Tue Apr 13</span><b>Old-town culture day 🏺</b> · all walkable, one anchor activity
+        <div class="steps">
+          <div class="st"><span class="ic">🚶</span><div><b>Getting there (~15 min, downhill):</b> walk down through Cedofeita to the Clérigos tower.</div></div>
+          <div class="st"><span class="ic">🎟️</span><div><span class="when">10:30</span><b><a class="maplink" href="https://www.google.com/maps/dir/?api=1&destination=Livraria+Lello+Rua+das+Carmelitas+Porto&travelmode=walking" target="_blank" rel="noopener">Livraria Lello</a></b> — open Tue <b>9:30 am–7 pm</b>, ~<b>€8pp</b> (redeemable against a book), ~45 min. <b>Book a slot online</b>; walk-ups queue for an hour.</div></div>
+          <div class="st"><span class="ic">🍜</span><div><span class="when">~12:30 lunch</span>Mercado do Bolhão — covered, dozens of stalls, no booking needed.</div></div>
+          <div class="st"><span class="ic">🌳</span><div>Afternoon in the <a class="maplink" href="https://www.google.com/maps/dir/?api=1&destination=Jardins+do+Palacio+de+Cristal+Porto&travelmode=walking" target="_blank" rel="noopener">Palácio de Cristal gardens</a> — free, peacocks, and the best river view in the city.</div></div>
+          <div class="st"><span class="ic">🎒</span><div><b>Back by ~5</b> — early dinner near the flat, nothing booked.</div></div>
+        </div>
+      </div>
+
+      <div class="dayplan"><span class="dl">Wed Apr 14</span>Douro valley day — <b>leave by 8:15</b> for the 9:00 train from São Bento. Backstop: last train back departs Pinhão 6:20 pm.</div>
+      <div class="dayplan"><span class="dl">Thu Apr 15</span>Slow day. Nothing booked on purpose — this is the buffer for whatever the week turns up.</div>
+      <div class="dayplan"><span class="dl">Fri Apr 16</span>Check out 10 am, train south. <i>(Add the onward booking when it arrives.)</i></div>
+    </div></details>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       There is one copy of this page and it is never public. It reaches only
+       the addresses on your allowlist, so confirmation numbers, door codes and
+       addresses belong in it in full — that is what makes it worth opening on
+       the morning of a flight. Nothing here is hidden from anyone who can read
+       the page at all.
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <div class="card" data-start="2030-04-12" data-end="2030-04-16">
+    <div class="card-top">
+      <div class="ico">📥</div>
+      <div class="body">
+        <div class="ttl">Inbox</div>
+        <div class="meta">Anything that could not be parsed lands here</div>
+      </div>
+    </div>
+    <details open><summary><span class="chev">▶</span> Unparsed &amp; awaiting filing</summary><div class="det">
+      <div class="row"><div class="k">How this works</div><div class="v">When something can't be read cleanly — an odd confirmation, a screenshot that didn't parse — it lands here as a dated note, with the original filed under <code>sources/</code>. Nothing you send is ever dropped on the floor.</div></div>
+    </div></details>
+  </div>
+
+  <footer>
+    <button class="pdfbtn" type="button" onclick="window.print()">⬇️ Save as PDF</button><br>
+    Made with <a href="https://ourtrip.page">OurTrip</a>. This page is a file in a
+    git repo you own — clone it, fork it, take it with you.<br>
+    Send more bookings anytime; this page updates as you go.
+  </footer>
+
+</div>
+
+<script>
+  // Expand every collapsible section when printing / saving to PDF, then
+  // restore the on-screen state afterwards so tap-to-expand still works.
+  (function(){
+    var reopened;
+    addEventListener("beforeprint", function(){
+      reopened = [];
+      document.querySelectorAll("details:not([open])").forEach(function(d){
+        reopened.push(d); d.open = true;
+      });
+    });
+    addEventListener("afterprint", function(){
+      (reopened || []).forEach(function(d){ d.open = false; });
+      reopened = null;
+    });
+  })();
+
+  // Time-awareness. Cosmetics only: this runs in the reader's browser, so it
+  // decides what is easy to find, never what is allowed to be seen.
+  (function(){
+    var today = new Date(); today.setHours(0,0,0,0);
+    function parse(s){ var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+
+    // 1. Classify every card against today.
+    var cards = [].slice.call(document.querySelectorAll(".card[data-start]"));
+    var pastN = 0, datedN = 0, current = null;
+    cards.forEach(function(c){
+      // A card whose dates are not filled in yet simply has no state.
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(c.dataset.start)) return;
+      datedN++;
+      var start = parse(c.dataset.start), end = parse(c.dataset.end || c.dataset.start);
+      if (today > end){ c.classList.add("is-past"); pastN++; }
+      else if (today >= start){ c.classList.add("is-current"); if (!current) current = c; }
+      else { c.classList.add("is-upcoming"); }
+    });
+
+    // 2. Finished cards collapse; ongoing ones get a "you are here" ribbon.
+    document.querySelectorAll(".card.is-past details[open]").forEach(function(d){ d.open = false; });
+    document.querySelectorAll(".card.is-current").forEach(function(c){
+      var r = document.createElement("div");
+      r.className = "here"; r.textContent = "📍 You are here";
+      c.insertBefore(r, c.firstChild);
+    });
+
+    // 3. A date divider inherits the state of the cards that follow it, so
+    //    hiding the past hides the heading with it rather than stranding it.
+    document.querySelectorAll(".day").forEach(function(day){
+      var n = day.nextElementSibling, kids = [];
+      while (n && !n.classList.contains("day")){
+        if (n.classList.contains("card") && n.dataset.start) kids.push(n);
+        n = n.nextElementSibling;
+      }
+      if (kids.length && kids.every(function(c){ return c.classList.contains("is-past"); }))
+        day.classList.add("is-past");
+      if (kids.some(function(c){ return c.classList.contains("is-current"); }))
+        day.classList.add("is-current");
+    });
+
+    // 4. The now bar is only meaningful once the trip has started.
+    var bar = document.getElementById("nowbar");
+    var txt = document.getElementById("nowText");
+    var btn = document.getElementById("togglePast");
+    var ov = document.getElementById("overview");
+    var ovBtn = document.getElementById("ovToggle");
+    var started = pastN > 0 || current, over = datedN > 0 && pastN === datedN;
+
+    if (bar && started){
+      bar.hidden = false;
+      var ttl = current && current.querySelector(".ttl");
+      txt.textContent = current ? ("Today — " + ttl.textContent.trim()) : "Between stops";
+    }
+
+    if (btn){
+      var syncPast = function(){
+        btn.textContent = document.body.classList.contains("hide-past") ? "👁️ Past" : "🙈 Past";
+      };
+      btn.addEventListener("click", function(){
+        document.body.classList.toggle("hide-past"); syncPast();
+      });
+      // Hide the past by default once underway — but never hide the whole trip.
+      if (pastN > 0 && !over) document.body.classList.add("hide-past");
+      syncPast();
+    }
+
+    // 5. Fold the overview away once travelling so the current day leads.
+    if (ov && ovBtn){
+      var syncOv = function(){
+        ovBtn.textContent = (ov.classList.contains("collapsed") ? "▸ " : "▾ ") + "Overview";
+      };
+      if (started) ov.classList.add("collapsed");
+      ovBtn.addEventListener("click", function(){ ov.classList.toggle("collapsed"); syncOv(); });
+      syncOv();
+    }
+
+    // 6. Land the reader where they actually are.
+    var here = document.querySelector(".day.is-current, .card.is-current");
+    if (here) setTimeout(function(){ here.scrollIntoView({ block: "center" }); }, 60);
+  })();
+
+  // Find within this trip. The browser has its own find, but on a phone it is
+  // three taps deep in a share sheet, and this is a page people open standing on
+  // a platform. Cosmetics again: it hides cards, it never decides what a reader
+  // is allowed to see — that is the allowlist's job, and it lives on the server.
+  (function(){
+    var bar = document.getElementById("findbar");
+    var q = document.getElementById("findq");
+    var out = document.getElementById("findn");
+    if (!bar || !q || !out) return;
+    bar.hidden = false;
+
+    var cards = [].slice.call(document.querySelectorAll(".card"));
+    var days = [].slice.call(document.querySelectorAll(".day"));
+    // Hide-past and find would otherwise fight over the same cards: a match in
+    // last week's leg is exactly what somebody is searching for. Searching lifts
+    // the toggle and clearing the box puts it back where the reader left it.
+    var pastWasHidden = false, searching = false;
+
+    var clear = function(){
+      cards.concat(days).forEach(function(el){ el.classList.remove("is-nomatch"); });
+      if (searching && pastWasHidden) document.body.classList.add("hide-past");
+      searching = false;
+      out.textContent = "";
+    };
+
+    q.addEventListener("input", function(){
+      var term = q.value.trim().toLowerCase();
+      if (!term) return clear();
+
+      if (!searching){
+        pastWasHidden = document.body.classList.contains("hide-past");
+        document.body.classList.remove("hide-past");
+        searching = true;
+      }
+
+      var hits = 0;
+      cards.forEach(function(c){
+        var match = c.textContent.toLowerCase().indexOf(term) >= 0;
+        c.classList.toggle("is-nomatch", !match);
+        if (match) hits++;
+      });
+
+      // A day heading with nothing left under it is noise.
+      days.forEach(function(d){
+        var kids = [], el = d.nextElementSibling;
+        while (el && el.classList.contains("card")){ kids.push(el); el = el.nextElementSibling; }
+        d.classList.toggle("is-nomatch", kids.length > 0 && kids.every(function(c){
+          return c.classList.contains("is-nomatch");
+        }));
+      });
+
+      out.textContent = hits ? (hits + (hits === 1 ? " match" : " matches")) : "no matches";
+    });
+  })();
+</script>
+</body>
+</html>
