@@ -9,8 +9,13 @@
 
 <style>
 /* ── Tokens ─────────────────────────────────────────────────────────────── */
+/* One palette, warm and light, on every device. The page followed the reader's
+   OS theme until 2026-08-01, which meant half of everybody opened a trip into a
+   near-black document that looked nothing like the product — and a printed
+   itinerary is a paper object, so paper is the honest default. A tenant who
+   wants a dark trip page still has one: the document is theirs to restyle. */
 :root{
-  color-scheme:light dark;
+  color-scheme:light;
   --bg:#faf8f4; --card:#fff; --border:#e6e1d8; --text:#1c1a17; --muted:#5f594f;
   --accent:#b4552d; --accent-soft:#f4e6dd;
   --green:#4d6b4e; --green-soft:#dde7da; --grey:#8b8278; --grey-soft:#ebe6dc;
@@ -18,11 +23,6 @@
   --serif:ui-serif,Georgia,"Iowan Old Style",serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --shadow:0 1px 2px rgba(28,26,23,.05),0 8px 24px rgba(28,26,23,.05);
-}
-@media (prefers-color-scheme:dark){
-  :root{--bg:#12100e;--card:#1a1815;--border:#2c2823;--text:#ece7df;--muted:#a09689;
-        --accent:#d98a5c;--accent-soft:#2a1f18;--green-soft:#1e2a1f;--grey-soft:#242019;
-        --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25)}
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.65;
@@ -58,7 +58,11 @@ header .who{margin-top:.9rem;font-size:.9375rem;color:var(--muted)}
 /* ── Overview — collapsed whole-trip index ──────────────────────────────── */
 .overview{margin-top:1.5rem;padding:1.125rem 1.25rem;background:var(--card);
           border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow)}
-.overview.collapsed .ovBody{display:none}
+/* Collapsing hides the box, not just what is in it. Hiding only .ovBody left
+   the padding, border, shadow and background behind — an empty white card
+   sitting under the nowbar with nothing in it. The control that brings it back
+   lives in the nowbar, so there is nothing in here that has to stay reachable. */
+.overview.collapsed{display:none}
 .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:1rem}
 .stat .lab{display:flex;align-items:center;gap:.4rem;font-size:.75rem;
            letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
@@ -132,9 +136,6 @@ details[open] > summary .chev{transform:rotate(90deg)}
 .tagcat.uq{background:#e8e0f0;color:#5b4680}
 .tagcat.kd{background:#dce9ef;color:#2a5d74}
 .tagcat.fr{background:var(--green-soft);color:var(--green)}
-@media (prefers-color-scheme:dark){
-  .tagcat.uq{background:#241d33;color:#b9a5dd} .tagcat.kd{background:#16262e;color:#8fc4da}
-}
 
 /* Day-by-day: the detailed per-day plan. */
 .det.days .dayplan{padding:.7rem 0;border-top:1px dashed var(--border);font-size:.9375rem}
@@ -177,7 +178,8 @@ body.hide-past .day.is-past{display:none}
   .card{break-inside:avoid;border-color:#ccc;box-shadow:none}
   .card.is-past{opacity:1}
   body.hide-past .card.is-past,body.hide-past .day.is-past{display:block}
-  .overview.collapsed .ovBody{display:block}
+  /* Printing wants the whole index back, container included. */
+  .overview.collapsed{display:block}
 }
 </style>
 </head>
